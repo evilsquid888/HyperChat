@@ -223,6 +223,7 @@ export type GPT_MODELS_TYPE = {
   toolMode?: "standard" | "compatible";
   isStrict: boolean;
   isDefault?: boolean;
+  health_check_enabled?: boolean;
 }
 export const GPT_MODELS = new Data("gpt_models.json", {
   data: [] as Array<GPT_MODELS_TYPE>,

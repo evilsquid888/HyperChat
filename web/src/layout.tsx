@@ -854,95 +854,111 @@ export function Layout() {
                       });
                     }
                   } else {
-                    setPending(true);
-                    setIsOpenTestLLM(true);
-                    setTimelineData([
-                      {
-                        color: "blue",
-                        children: "Testing the configuration, please wait...",
-                      },
-                    ]);
+                    // Check if health check is enabled
+                    if (values.health_check_enabled !== false) {
+                      setPending(true);
+                      setIsOpenTestLLM(true);
+                      setTimelineData([
+                        {
+                          color: "blue",
+                          children: "Testing the configuration, please wait...",
+                        },
+                      ]);
 
-                    let o = new OpenAiChannel({
-                      ...values,
-                      requestType: "complete"
-                    }, []);
-                    let testBaseRes = await o.testBase().then(e => {
-                      setTimelineData((x) => {
-                        x.push({
-                          color: "green",
-                          children: t`Text Chat Test Success`,
-                        });
-                        return x.slice();
-                      });
-                      return true
-                    }).catch(e => {
-                      console.error(e);
-                      setTimelineData((x) => {
-                        x.push({
-                          color: "red",
-                          children: <Pre>{t`Text Chat Test Failed`}
-                            <div className="text-red-500">{e.message}</div>
-                          </Pre>,
-                        });
-                        return x.slice();
-                      });
-                      return false
-                    })
-                    if (testBaseRes) {
-                      await o.testImage().then(() => {
+                      let o = new OpenAiChannel({
+                        ...values,
+                        requestType: "complete"
+                      }, []);
+                      let testBaseRes = await o.testBase().then(e => {
                         setTimelineData((x) => {
                           x.push({
                             color: "green",
-                            children: t`Image Support Test Success`,
+                            children: t`Text Chat Test Success`,
                           });
                           return x.slice();
                         });
-                        values.supportImage = true;
+                        return true
                       }).catch(e => {
                         console.error(e);
                         setTimelineData((x) => {
                           x.push({
                             color: "red",
-                            children: <Pre>{t`Image Support Test Failed`}
+                            children: <Pre>{t`Text Chat Test Failed`}
                               <div className="text-red-500">{e.message}</div>
                             </Pre>,
                           });
                           return x.slice();
                         });
-                        values.supportImage = false;
+                        return false
                       })
-
-
-                      await o.testTool().then(() => {
-                        setTimelineData((x) => {
-                          x.push({
-                            color: "green",
-                            children: t`Tool Call Test Success`,
+                      if (testBaseRes) {
+                        await o.testImage().then(() => {
+                          setTimelineData((x) => {
+                            x.push({
+                              color: "green",
+                              children: t`Image Support Test Success`,
+                            });
+                            return x.slice();
                           });
-                          return x.slice();
-                        });
-                        values.supportTool = true;
-                      }).catch(e => {
-                        console.error(e);
-                        setTimelineData((x) => {
-                          x.push({
-                            color: "red",
-                            children: <Pre>{t`Tool Call Test Failed`}
-                              <div className="text-red-500">{e.message}</div>
-                            </Pre>,
+                          values.supportImage = true;
+                        }).catch(e => {
+                          console.error(e);
+                          setTimelineData((x) => {
+                            x.push({
+                              color: "red",
+                              children: <Pre>{t`Image Support Test Failed`}
+                                <div className="text-red-500">{e.message}</div>
+                              </Pre>,
+                            });
+                            return x.slice();
                           });
-                          return x.slice();
-                        });
-                        values.supportTool = false;
-                      })
-                      setPending(false);
-                      setLoadingCheckLLM(false);
+                          values.supportImage = false;
+                        })
 
+
+                        await o.testTool().then(() => {
+                          setTimelineData((x) => {
+                            x.push({
+                              color: "green",
+                              children: t`Tool Call Test Success`,
+                            });
+                            return x.slice();
+                          });
+                          values.supportTool = true;
+                        }).catch(e => {
+                          console.error(e);
+                          setTimelineData((x) => {
+                            x.push({
+                              color: "red",
+                              children: <Pre>{t`Tool Call Test Failed`}
+                                <div className="text-red-500">{e.message}</div>
+                              </Pre>,
+                            });
+                            return x.slice();
+                          });
+                          values.supportTool = false;
+                        })
+                        setPending(false);
+                        setLoadingCheckLLM(false);
+
+                      } else {
+                        save = false;
+                        setPending(false);
+                        setLoadingCheckLLM(false);
+                      }
                     } else {
-                      save = false;
-                      setPending(false);
+                      // Skip health check if disabled
                       setLoadingCheckLLM(false);
+                      // Keep any existing supportImage and supportTool values if editing
+                      if (values.key) {
+                        const existingModel = GPT_MODELS.get().data.find(
+                          (e) => e.key == values.key
+                        );
+                        if (existingModel) {
+                          values.supportImage = existingModel.supportImage;
+                          values.supportTool = existingModel.supportTool;
+                        }
+                      }
                     }
                   }
                   if (save) {
@@ -1127,6 +1143,14 @@ export function Layout() {
               >
                 <Switch></Switch>
               </Form.Item>}
+              <Form.Item
+                name="health_check_enabled"
+                label={t`Enable Health Check`}
+                valuePropName="checked"
+                tooltip="Some LLMs may not implement health check correctly. Disable if needed."
+              >
+                <Switch></Switch>
+              </Form.Item>
 
             </>)}
 

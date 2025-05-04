@@ -646,6 +646,7 @@ export const Chat = ({
             baseURL: config.baseURL,
             apiKey: config.apiKey,
             model: config.model,
+            health_check_enabled: config.health_check_enabled,
           },
         );
         cacheOBJ.current[cacheKey] = res;
@@ -2445,6 +2446,7 @@ export const Chat = ({
                 currentChat.current.attachedDialogueCount =
                   values.attachedDialogueCount;
                 currentChat.current.temperature = values.temperature;
+                currentChat.current.health_check_enabled = values.health_check_enabled;
 
                 calcAttachDialogue(
                   currentChat.current.messages,
@@ -2474,6 +2476,17 @@ export const Chat = ({
             name="label"
             label={t`Name`}
           >
+<Form.Item
+              name="health_check_enabled"
+              label={t`Enable Health Check`}
+              valuePropName="checked"
+              tooltip="Some LLMs may not implement health check correctly. Disable if needed."
+            >
+              <Radio.Group>
+                <Radio value={true}>Enable</Radio>
+                <Radio value={false}>Disable</Radio>
+              </Radio.Group>
+            </Form.Item>
             <InputAI aiGen={async () => {
               let res = await rename([{
                 role: "user" as const,
